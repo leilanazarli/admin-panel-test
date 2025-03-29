@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --error: #ef233c;
+            --success: #2ecc71;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            color: #333;
+        }
+        
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        
+        button:hover {
+            background: #3a56d4;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .alert-error {
+            background: #fdecea;
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+        
+        .alert-success {
+            background: #e8f5e9;
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .spinner {
+            border: 3px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary);
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Contact Us</h1>
+    
+    <div id="error-alert" class="alert alert-error"></div>
+    <div id="success-alert" class="alert alert-success"></div>
+    
+    <form id="contact-form">
+        <div class="form-group">
+            <label for="name">Your Name</label>
+            <input type="text" id="name" name="name" required minlength="2" maxlength="100">
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="content">Message</label>
+            <textarea id="content" name="content" required minlength="10" maxlength="1000"></textarea>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div> Sending your message...
+        </div>
+        
+        <button type="submit">Send Message</button>
+    </form>
+
+    <script>
+        const form = document.getElementById('contact-form');
+        const errorAlert = document.getElementById('error-alert');
+        const successAlert = document.getElementById('success-alert');
+        const loading = document.getElementById('loading');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Reset alerts
+            errorAlert.style.display = 'none';
+            successAlert.style.display = 'none';
+            loading.style.display = 'block';
+            
+            const formData = {
+                name: form.name.value.trim(),
+                email: form.email.value.trim(),
+                content: form.content.value.trim()
+            };
+            
+            try {
+                const response = await fetch('http://192.168.100.55:8001/host/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to send message');
+                }
+                
+                // Success
+                successAlert.textContent = 'Message sent successfully! We will get back to you soon.';
+                successAlert.style.display = 'block';
+                form.reset();
+            } catch (error) {
+                console.error('Error:', error);
+                errorAlert.textContent = error.message || 'An error occurred while sending your message';
+                errorAlert.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+        
+        // Basic client-side validation
+        form.email.addEventListener('blur', (e) => {
+            const email = e.target.value;
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                e.target.setCustomValidity('Please enter a valid email address');
+            } else {
+                e.target.setCustomValidity('');
+            }
+        });
+    </script>
+</body>
+</html>

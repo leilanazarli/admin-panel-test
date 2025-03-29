@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Vehicle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+
+        .form-container h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-container input,
+        .form-container select,
+        .form-container textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .form-container button:hover {
+            background-color: #218838;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-container">
+        <h2>Add Vehicle</h2>
+        <form id="vehicleForm" enctype="multipart/form-data">
+            <input type="text" id="name" placeholder="Name" required>
+            <textarea id="description" placeholder="Description" required></textarea>
+            <input type="text" id="brand" placeholder="Brand" required>
+            <input type="text" id="carModel" placeholder="Model" required>
+            <input type="text" id="carClass" placeholder="Class" required>
+            <input type="text" id="carKind" placeholder="Kind" required>
+            <input type="text" id="gearKind" placeholder="Gear Type" required>
+            <input type="text" id="fuelKind" placeholder="Fuel Type" required>
+            <input type="number" id="year" placeholder="Year" required>
+            <input type="number" id="deposit" placeholder="Deposit" required>
+            <input type="number" id="price" placeholder="Price" required>
+            <input type="number" id="priceMonth" placeholder="Monthly Price" required>
+            <input type="number" id="seats" placeholder="Seats" required>
+            <input type="number" id="doors" placeholder="Doors" required>
+            <input type="text" id="color" placeholder="Color" required>
+            <input type="file" id="images" multiple accept="image/*">
+            <button type="submit">Add Vehicle</button>
+        </form>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <script>
+        document.getElementById('vehicleForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    // 1. Collect all form data (including images) into FormData
+    const formData = new FormData();
+    
+    // Append text/number fields (match backend expectations)
+    formData.append('name', document.getElementById('name').value);
+    formData.append('description', document.getElementById('description').value);
+    formData.append('brand', document.getElementById('brand').value);
+    formData.append('carModel', document.getElementById('carModel').value);
+    formData.append('carClass', document.getElementById('carClass').value);
+    formData.append('carKind', document.getElementById('carKind').value);
+    formData.append('gearKind', document.getElementById('gearKind').value);
+    formData.append('fuelKind', document.getElementById('fuelKind').value);
+    formData.append('year', document.getElementById('year').value);
+    formData.append('deposit', document.getElementById('deposit').value);
+    formData.append('price', document.getElementById('price').value);
+    formData.append('priceMonth', document.getElementById('priceMonth').value);
+    formData.append('seats', document.getElementById('seats').value);
+    formData.append('doors', document.getElementById('doors').value);
+    formData.append('color', document.getElementById('color').value);
+
+    // Append image files (required by the backend)
+    const files = document.getElementById('images').files;
+    if (files.length === 0) {
+        document.getElementById('errorMessage').textContent = 'At least one image is required';
+        return; // Stop if no images are selected
+    }
+    for (let i = 0; i < files.length; i++) {
+        formData.append('images', files[i]); // Key must be 'images' (matches multer config)
+    }
+// https://rentacar-api.onrender.com
+    try {
+        const response = await fetch('http://192.168.100.55:8001/host/vehicle', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`, // Auth token
+                // Do NOT set 'Content-Type': browser sets it automatically for FormData
+            },
+            body: formData, // Send FormData (includes files + text fields)
+            credentials: 'include' // Include cookies (if needed)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('Vehicle added successfully!');
+            window.location.href = '/';
+        } else {
+            document.getElementById('errorMessage').textContent = data.message || 'Error submitting form';
+        }
+    } catch (error) {
+        document.getElementById('errorMessage').textContent = 'Network error. Please try again.';
+        console.error('Submission error:', error);
+    }
+});
+    </script>
+</body>
+
+</html>
